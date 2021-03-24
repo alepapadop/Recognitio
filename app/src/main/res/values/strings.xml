@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Recognitio</string>
+    <string name="camera_permission">Camera permission</string>
+</resources>
