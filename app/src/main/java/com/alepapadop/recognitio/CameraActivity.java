@@ -26,6 +26,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Display;
 import android.view.OrientationEventListener;
+import android.view.View;
 import android.widget.TextView;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -39,14 +40,14 @@ import java.util.concurrent.ExecutionException;
 
 public class CameraActivity extends AppCompatActivity {
 
-    private PreviewView previewView;
-    private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private TextView textView;
+    private PreviewView                             _previewView;
+    private ListenableFuture<ProcessCameraProvider> _cameraProviderFuture;
+    private TFClassifier                            _tf_classifier;
+    private Activity                                _activity;
+    private ObjectTracker                           _obj_tracker;
+    private Draw                                    _draw;
 
     private String TAG = "CameraX";
-
-    private TFClassifier _tf_classifier;
-    private Activity     _activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,17 +55,18 @@ public class CameraActivity extends AppCompatActivity {
         setContentView(R.layout.activity_camera);
 
         _activity = this;
+        _draw = findViewById(R.id.draw);
+        _previewView = findViewById(R.id.previewView);
 
-        previewView = findViewById(R.id.previewView);
+        _obj_tracker = new ObjectTracker(_draw);
 
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-        textView = findViewById(R.id.orientation);
+        _cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
-        cameraProviderFuture.addListener(new Runnable() {
+        _cameraProviderFuture.addListener(new Runnable() {
             @Override
             public void run() {
                 try {
-                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                    ProcessCameraProvider cameraProvider = _cameraProviderFuture.get();
                     bindImageAnalysis(cameraProvider);
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
@@ -100,9 +102,10 @@ public class CameraActivity extends AppCompatActivity {
 
                 if (bitmap != null) {
                     final List<Recognition> results =
-                            _tf_classifier.TFRecognizeImage(bitmap, image.getImageInfo().getRotationDegrees());
-
+                            _tf_classifier.TFRecognizeImage2(bitmap, image.getImageInfo().getRotationDegrees());
                     Log.d(TAG, results.toString());
+
+                    _obj_tracker.ObjectTrackerDraw(results);
                 } else {
                     Log.d(TAG, "No bitmap");
                 }
@@ -146,26 +149,14 @@ public class CameraActivity extends AppCompatActivity {
             }
         });
 
-        OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                textView.setText(Integer.toString(orientation));
-            }
-        };
-
-        orientationEventListener.enable();
-
         Preview preview = new Preview.Builder().build();
 
         CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
 
-        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+        preview.setSurfaceProvider(_previewView.getSurfaceProvider());
 
         cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector,
                 imageAnalysis, preview);
     }
-
-
-
 }

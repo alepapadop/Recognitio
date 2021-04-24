@@ -69,5 +69,22 @@ public class Recognition {
 
         return resultString.trim();
     }
+
+    public String toStringDraw() {
+        String resultString = "";
+        if (id != null) {
+            resultString += "[" + id + "] ";
+        }
+
+        if (title != null) {
+            resultString += title + " ";
+        }
+
+        if (confidence != null) {
+            resultString += String.format("(%.1f%%) ", confidence * 100.0f);
+        }
+
+        return resultString.trim();
+    }
 }
 

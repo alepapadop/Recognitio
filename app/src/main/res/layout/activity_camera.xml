@@ -14,17 +14,9 @@
             android:id="@+id/previewView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-    </FrameLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <TextView
-            android:id="@+id/orientation"
+        <com.alepapadop.recognitio.Draw
+            android:id="@+id/draw"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:textSize="100sp"
-            android:textColor="#9999ff"/>
-    </LinearLayout>
+            android:layout_height="match_parent"/>
+    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

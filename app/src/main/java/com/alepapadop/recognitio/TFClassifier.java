@@ -17,10 +17,13 @@ import org.tensorflow.lite.support.image.ImageProcessor;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.image.ops.ResizeOp;
 import org.tensorflow.lite.support.image.ops.ResizeWithCropOrPadOp;
+import org.tensorflow.lite.support.image.ops.TensorOperatorWrapper;
 import org.tensorflow.lite.support.label.TensorLabel;
 import org.tensorflow.lite.support.model.Model;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import org.tensorflow.lite.support.image.ops.Rot90Op;
+import org.tensorflow.lite.task.vision.detector.Detection;
+import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -56,6 +59,9 @@ public abstract class TFClassifier {
     private int                         _img_sz_x;
     private int                         _img_sz_y;
     private List<String>                _labels;
+
+    ObjectDetector.ObjectDetectorOptions    _tf_obj_detector_options;
+    ObjectDetector                          _tf_obj_detector;
 
 
     protected abstract String           getModelPath();
@@ -109,8 +115,6 @@ public abstract class TFClassifier {
 
         // {1, height, width, 3}
         int[] shape_in = tensor_in.shape();
-
-        // {1, NUM_CLASSES}
         int[] shape_out = tensor_out.shape();
 
         DataType data_type_in = tensor_in.dataType();
@@ -124,11 +128,15 @@ public abstract class TFClassifier {
 
         // Creates the output tensor and its processor.
         _tf_buffer = TensorBuffer.createFixedSize(shape_out, data_type_out);
+        //TensorBuffer.
+
+
 
         // Creates the post processor for the output probability.
         _tf_proc = new TensorProcessor.Builder().add(getPostProcessNormalizeOp()).build();
 
     }
+
 
     public void TFClose() {
 
@@ -199,35 +207,50 @@ public abstract class TFClassifier {
 
     public List<Recognition> TFRecognizeImage(final Bitmap bitmap, int sensorOrientation) {
 
-        // Logs this method so that it can be analyzed with systrace.
-        Trace.beginSection("recognizeImage");
-
-        Trace.beginSection("loadImage");
-        long startTimeForLoadImage = SystemClock.uptimeMillis();
-
         _tf_image = TFLoadImage(bitmap, sensorOrientation);
 
-        long endTimeForLoadImage = SystemClock.uptimeMillis();
-        Trace.endSection();
-
-
-        // Runs the inference call.
-        Trace.beginSection("runInference");
-        long startTimeForReference = SystemClock.uptimeMillis();
-
         _tf_interpreter.run(_tf_image.getBuffer(), _tf_buffer.getBuffer().rewind());
-
-        long endTimeForReference = SystemClock.uptimeMillis();
-        Trace.endSection();
 
 
         // Gets the map of label and probability.
         Map<String, Float> labeledProbability = new
                 TensorLabel(_labels, _tf_proc.process(_tf_buffer)).getMapWithFloatValue();
-        Trace.endSection();
 
-        //
+        _tf_buffer.getFloatValue(0);
+
         return TFGetBestResults(labeledProbability);
     }
 
+
+    protected TFClassifier(Activity activity, int num_threads) throws IOException {
+        // create the options for the Intepreter
+
+        _tf_file_model = FileUtil.loadMappedFile(activity, getModelPath());
+
+        _tf_obj_detector_options = ObjectDetector.ObjectDetectorOptions.builder().setMaxResults(2).build();
+        _tf_obj_detector = ObjectDetector.createFromBufferAndOptions(_tf_file_model, _tf_obj_detector_options);
+
+    }
+
+    public List<Recognition> TFRecognizeImage2(final Bitmap bitmap, int sensorOrientation) {
+
+        _tf_image = TensorImage.fromBitmap(bitmap);
+        // Run inference
+        List<Detection> results = _tf_obj_detector.detect(_tf_image);
+
+        final ArrayList<Recognition> recognitions = new ArrayList<>();
+        int cnt = 0;
+        for (Detection detection : results) {
+            recognitions.add(
+                    new Recognition(
+                            "" + cnt++,
+                            detection.getCategories().get(0).getLabel(),
+                            detection.getCategories().get(0).getScore(),
+                            detection.getBoundingBox()));
+
+        }
+
+        return recognitions;
+
+    }
 }

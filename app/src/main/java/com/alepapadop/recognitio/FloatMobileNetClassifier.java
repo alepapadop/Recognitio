@@ -29,7 +29,7 @@ public class FloatMobileNetClassifier extends TFClassifier{
      */
     public FloatMobileNetClassifier(Activity activity, Model.Device device, int numThreads)
             throws IOException {
-        super(activity, device, numThreads);
+        super(activity, numThreads);
     }
 
     @Override
@@ -37,12 +37,16 @@ public class FloatMobileNetClassifier extends TFClassifier{
         // you can download this file from
         // see build.gradle for where to obtain this file. It should be auto
         // downloaded into assets.
-        return "model.tflite";
+        //return "model.tflite";
+
+        return "ssd_mobilenet_v1_1_metadata_1.tflite";
     }
 
     @Override
     protected String getLabelPath() {
-        return "labels.txt";
+
+        //return "labels.txt";
+        return "labels_mobilenet_quant_v1_224.txt";
     }
 
     @Override
