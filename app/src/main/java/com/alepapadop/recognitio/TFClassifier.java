@@ -6,6 +6,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
 import android.os.Trace;
+import android.util.Log;
 
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Interpreter;
@@ -19,6 +20,7 @@ import org.tensorflow.lite.support.image.ops.ResizeOp;
 import org.tensorflow.lite.support.image.ops.ResizeWithCropOrPadOp;
 import org.tensorflow.lite.support.image.ops.TensorOperatorWrapper;
 import org.tensorflow.lite.support.label.TensorLabel;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
 import org.tensorflow.lite.support.model.Model;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import org.tensorflow.lite.support.image.ops.Rot90Op;
@@ -27,6 +29,7 @@ import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -42,12 +45,6 @@ public abstract class TFClassifier {
 
     private static int                  _num_detections = 5;
     private int                         _num_threads = 4;
-    private boolean                     _is_quantized;
-
-    private int[]                       _detections;
-    private double[][][]                _locations;
-    private int[][]                     _classes;
-    private double[][]                  _scores;
 
     private Interpreter                 _tf_interpreter;
     private MappedByteBuffer            _tf_file_model;
@@ -155,23 +152,6 @@ public abstract class TFClassifier {
         //}
     }
 
-    private TensorImage TFLoadImage(final Bitmap bitmap, int sensorOrientation) {
-
-        _tf_image.load(bitmap);
-
-        int cropSize = min(bitmap.getWidth(), bitmap.getHeight());
-        int numRotation = sensorOrientation / 90;
-
-        ImageProcessor imageProcessor =
-                new ImageProcessor.Builder()
-                        .add(new ResizeWithCropOrPadOp(cropSize, cropSize))
-                        .add(new ResizeOp(_img_sz_x, _img_sz_y, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
-                        .add(new Rot90Op(numRotation))
-                        .add(getPreProcessNormalizeOp())
-                        .build();
-
-        return imageProcessor.process(_tf_image);
-    }
 
     private static List<Recognition> TFGetBestResults(Map<String, Float> labelProb) {
 
@@ -227,14 +207,57 @@ public abstract class TFClassifier {
 
         _tf_file_model = FileUtil.loadMappedFile(activity, getModelPath());
 
-        _tf_obj_detector_options = ObjectDetector.ObjectDetectorOptions.builder().setMaxResults(2).build();
+        _tf_obj_detector_options = ObjectDetector.ObjectDetectorOptions.builder().setMaxResults(5).build();
         _tf_obj_detector = ObjectDetector.createFromBufferAndOptions(_tf_file_model, _tf_obj_detector_options);
 
+        //_tf_options = new Interpreter.Options();
+        //_tf_interpreter = new Interpreter(_tf_file_model, _tf_options);
+
+        //int shape[] = _tf_interpreter.getInputTensor(0).shape();
+
+        //_img_sz_x = 300;
+        //_img_sz_y = 300;
+
+        MetadataExtractor meta = new MetadataExtractor(_tf_file_model);
+
+        if (meta.hasMetadata()) {
+            int shape[] = meta.getInputTensorShape(0);  // this is of {1, 300, 300 ,3}
+
+            _img_sz_x = shape[1];
+            _img_sz_y = shape[2];
+
+        } else {
+            assert(false);
+        }
+    }
+
+
+    private TensorImage TFLoadImage(final Bitmap bitmap, int sensorOrientation) {
+
+        //_tf_image.load(bitmap);
+        _tf_image = TensorImage.fromBitmap(bitmap);
+
+        int cropSize = min(bitmap.getWidth(), bitmap.getHeight());
+        int numRotation = sensorOrientation / 90;
+
+        ImageProcessor imageProcessor =
+                new ImageProcessor.Builder()
+                        //.add(new ResizeWithCropOrPadOp(cropSize, cropSize))
+                        .add(new ResizeOp(_img_sz_x, _img_sz_y, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
+                        .add(new Rot90Op(numRotation))
+                        //.add(getPreProcessNormalizeOp())
+                        .build();
+
+        return imageProcessor.process(_tf_image);
     }
 
     public List<Recognition> TFRecognizeImage2(final Bitmap bitmap, int sensorOrientation) {
 
-        _tf_image = TensorImage.fromBitmap(bitmap);
+        //_tf_image = TensorImage.fromBitmap(bitmap);
+        _tf_image = TFLoadImage(bitmap, sensorOrientation);
+
+        Log.d("CameraX", "After image proc width: " + _tf_image.getWidth() + " height: " + _tf_image.getHeight());
+
         // Run inference
         List<Detection> results = _tf_obj_detector.detect(_tf_image);
 

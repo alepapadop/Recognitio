@@ -59,7 +59,7 @@ public class Draw extends View {
 
         paint.setStyle(Paint.Style.STROKE);
 
-        paint.setColor(DrawGetColors(true));
+        paint.setColor(DrawGetColors(false));
 
         paint.setStrokeWidth(3);
 
@@ -83,10 +83,12 @@ public class Draw extends View {
 
     private void BatchDraw(Canvas canvas) {
         for (Recognition rec : _list) {
+            _color_index = Integer.parseInt(rec.getId());
             Paint paint = CreateObjectPaint();
             Paint paint_label = CreateInfoPaint();
 
             RectF rect = rec.getLocation();
+
 
 
             canvas.drawRect(rect, paint);

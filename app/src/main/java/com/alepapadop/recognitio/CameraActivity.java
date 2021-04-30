@@ -92,6 +92,8 @@ public class CameraActivity extends AppCompatActivity {
                         img.getWidth(), img.getHeight(), Bitmap.Config.ARGB_8888);
                 y2b.yuvToRgb(image.getImage(), bitmap);
 
+                _obj_tracker.ObjectTrackerSetSize(img.getWidth(), img.getHeight());
+
                 if (_tf_classifier == null) {
                     try {
                         _tf_classifier = TFClassifier.create(_activity, Model.Device.CPU, 2);
