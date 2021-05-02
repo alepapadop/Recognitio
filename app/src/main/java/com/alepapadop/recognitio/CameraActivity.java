@@ -85,26 +85,24 @@ public class CameraActivity extends AppCompatActivity {
 
     }
 
+    @SuppressLint("RestrictedApi")
     private void bindImageAnalysis(@NonNull ProcessCameraProvider cameraProvider) {
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         //.setTargetResolution(new Size(1280, 720))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build();
 
-
+        _obj_tracker.ObjectTrackerSetViewSize(_draw.getWidth(), _draw.getHeight());
 
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
             @SuppressLint("UnsafeExperimentalUsageError")
             @Override
-            public void analyze(@NonNull ImageProxy image) {
+            public void analyze(@NonNull ImageProxy image_proxy) {
 
-                int rotationDegrees = image.getImageInfo().getRotationDegrees();
+                _obj_tracker.ObjectTrackerSetSize(image_proxy.getWidth(), image_proxy.getHeight());
 
+                ArrayList<Recognition> detections = _detector.DetectImage(image_proxy);
 
-                Log.d(RecognitioSetting.get_log_tag(), "roation degrees " + rotationDegrees);
-
-                _detector.DetectImage(image);
-
-                _detector.DetectorBB();
+                _obj_tracker.ObjectTrackerDraw(detections);
 
 /*
                 new Runnable() {
@@ -138,7 +136,7 @@ public class CameraActivity extends AppCompatActivity {
 
  */
 
-                image.close();
+                image_proxy.close();
 
             }
         });
@@ -152,6 +150,7 @@ public class CameraActivity extends AppCompatActivity {
 
         cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector,
                 imageAnalysis, preview);
+
 
 
         OrientationEventListener orientationEventListener = new OrientationEventListener(this) {

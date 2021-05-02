@@ -15,9 +15,16 @@ import java.util.List;
 
 public class ObjectTracker {
 
-    Draw    _draw;
-    int     _width = 1;
-    int     _height = 1;
+    private Draw    _draw;
+    private int     _width = 1;
+    private int     _height = 1;
+
+    private int     _view_height = 1;
+    private int     _view_width = 1;
+
+    private int     _detecctor_height = 1;
+    private int     _detector_width = 1;
+
 
     public ObjectTracker(Draw draw) {
         _draw = draw;
@@ -27,18 +34,31 @@ public class ObjectTracker {
 
         _width = width;
         _height = height;
+
+    }
+
+    public void ObjectTrackerSetViewSize(int width, int height) {
+
+        _view_width = width;
+        _view_height = height;
+
     }
 
     private void ObjectTrackerFixLocations(Recognition rec) {
 
         RectF rectf = rec.getLocation();
 
-        rectf.left = rec.getLocation().left * _height/300;
-        rectf.top = rec.getLocation().top * _width/300;
-        rectf.right = rec.getLocation().right * _height/300;
-        rectf.bottom = rec.getLocation().bottom * _width/300;
+        Log.d(RecognitioSetting.get_log_tag(), "width: " + _width + " height: " + _height);
+        Log.d(RecognitioSetting.get_log_tag(), "width: " + _view_width + " height: " + _view_height);
 
-        Log.d(RecognitioSetting.get_log_tag(), "rect size: left: " + rectf.left + " top: " + rectf.top + " right: " + rectf.right + " bottom:" + rectf.bottom);
+        Log.d(RecognitioSetting.get_log_tag(), "before rect size: left: " + rectf.left + " top: " + rectf.top + " right: " + rectf.right + " bottom:" + rectf.bottom);
+
+        rectf.left = rec.getLocation().left * (_width/300) * (_view_width/_width);
+        rectf.top = rec.getLocation().top * (_height/300) * (_view_height/_height);
+        rectf.right = rec.getLocation().right * (_width/300) * (_view_width/_width);
+        rectf.bottom = rec.getLocation().bottom * (_height/300) * (_view_height/_height);
+
+        Log.d(RecognitioSetting.get_log_tag(), "after rect size: left: " + rectf.left + " top: " + rectf.top + " right: " + rectf.right + " bottom:" + rectf.bottom);
 
         rec.setLocation(rectf);
 

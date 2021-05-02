@@ -2,9 +2,10 @@ package com.alepapadop.recognitio;
 
 public class RecognitioSetting {
 
-    private final static int         _num_detections = 5;
+    private final static int         _num_detections = 1;
     private final static int         _num_threads = 4;
-    private final static String      _model_name = "ssd_mobilenet_v1_1_metadata_1.tflite";
+    //private final static String      _model_name = "ssd_mobilenet_v1_1_metadata_1.tflite";
+    private final static String      _model_name = "lite-model_ssd_mobilenet_v1_1_metadata_2.tflite";
     private final static float       _confidence_threshold = 0.5f;
 
     private final static boolean    _use_ml_kit = false;

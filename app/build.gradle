@@ -30,6 +30,9 @@ android {
     aaptOptions {
         noCompress "tflite"
     }
+    buildFeatures {
+        mlModelBinding true
+    }
 }
 
 dependencies {

@@ -22,6 +22,7 @@ import androidx.camera.core.ImageProxy;
 
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.common.FileUtil;
+import org.tensorflow.lite.support.common.ops.CastOp;
 import org.tensorflow.lite.support.common.ops.NormalizeOp;
 import org.tensorflow.lite.support.common.ops.QuantizeOp;
 import org.tensorflow.lite.support.image.ImageProcessor;
@@ -98,8 +99,9 @@ public class TFDetector {
                         //.add(new ResizeWithCropOrPadOp(cropSize, cropSize))
                         .add(new ResizeOp(_img_sz_x, _img_sz_y, ResizeOp.ResizeMethod.BILINEAR))
                         .add(new Rot90Op(numRotation))
-                        .add(new NormalizeOp(127.5f, 127.5f))
-                        .add(new QuantizeOp(0, 255))
+                        //.add(new NormalizeOp(127.5f, 127.5f))
+                        //.add(new QuantizeOp(0, 255))
+                        .add(new CastOp(DataType.UINT8))
                         .build();
 
         return imageProcessor.process(tf_image);
@@ -130,7 +132,7 @@ public class TFDetector {
 
         debug_write_image_wrap(context, tf_image.getBitmap());
 
-        Log.d(RecognitioSetting.get_log_tag(), "After image proc width: " + tf_image.getWidth() + " height: " + tf_image.getHeight());
+        //Log.d(RecognitioSetting.get_log_tag(), "After image proc width: " + tf_image.getWidth() + " height: " + tf_image.getHeight());
 
         List<Detection> results = _tf_obj_detector.detect(tf_image);
 
@@ -151,6 +153,10 @@ public class TFDetector {
     }
 
 
+    //-----------------------------------------
+    //-----------------------------------------
+    //------------ DEBUG FUNCTIONS ------------
+    //-----------------------------------------
     //-----------------------------------------
 
     private static boolean flg = true;
@@ -199,29 +205,4 @@ public class TFDetector {
         flg = false;
     }
 
-   /* private Bitmap toBitmap(Image image) {
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
-
-        byte[] nv21 = new byte[ySize + uSize + vSize];
-        //U and V are swapped
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
-
-        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
-
-        byte[] imageBytes = out.toByteArray();
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-    }
-
-    */
 }

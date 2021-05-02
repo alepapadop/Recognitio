@@ -14,8 +14,7 @@ public class Detector {
     private MLDetector          _ml_detector;
     private TFDetector          _tf_detector;
     private final Context       _context;
-    private final ObjectTracker _obj_tracker;
-    private ArrayList           _detection_results;
+
 
     public Detector(Activity activity, Context context, ObjectTracker obj_tracker) {
 
@@ -32,22 +31,19 @@ public class Detector {
                 Log.d(RecognitioSetting.get_log_tag(), e.toString());
             }
         }
-
-        _obj_tracker = obj_tracker;
     }
 
-    public void DetectImage(ImageProxy image_proxy) {
+    public ArrayList<Recognition> DetectImage(ImageProxy image_proxy) {
 
-        _obj_tracker.ObjectTrackerSetSize(image_proxy.getWidth(), image_proxy.getHeight());
+        ArrayList detection_results;
 
         if (_use_ml_kit) {
-            _detection_results = _ml_detector.MLDetectImage(image_proxy);
+            detection_results = _ml_detector.MLDetectImage(image_proxy);
         } else {
-            _detection_results = _tf_detector.TFDetectImage(_context, image_proxy);
+            detection_results = _tf_detector.TFDetectImage(_context, image_proxy);
         }
+
+        return detection_results;
     }
 
-    public void DetectorBB() {
-        _obj_tracker.ObjectTrackerDraw(_detection_results);
-    }
 }
