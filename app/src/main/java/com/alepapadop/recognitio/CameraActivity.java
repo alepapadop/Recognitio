@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -16,6 +17,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -26,15 +29,20 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Display;
 import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.view.View;
 import android.widget.TextView;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.objects.DetectedObject;
+import com.google.mlkit.vision.objects.ObjectDetection;
 
 import org.tensorflow.lite.support.model.Model;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -42,10 +50,9 @@ public class CameraActivity extends AppCompatActivity {
 
     private PreviewView                             _previewView;
     private ListenableFuture<ProcessCameraProvider> _cameraProviderFuture;
-    private TFClassifier                            _tf_classifier;
-    private Activity                                _activity;
     private ObjectTracker                           _obj_tracker;
     private Draw                                    _draw;
+    private Detector                                _detector;
 
     private String TAG = "CameraX";
 
@@ -54,11 +61,11 @@ public class CameraActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        _activity = this;
         _draw = findViewById(R.id.draw);
         _previewView = findViewById(R.id.previewView);
 
         _obj_tracker = new ObjectTracker(_draw);
+        _detector = new Detector(this, getApplicationContext(), _obj_tracker);
 
         _cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
@@ -67,7 +74,9 @@ public class CameraActivity extends AppCompatActivity {
             public void run() {
                 try {
                     ProcessCameraProvider cameraProvider = _cameraProviderFuture.get();
+
                     bindImageAnalysis(cameraProvider);
+
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -78,41 +87,24 @@ public class CameraActivity extends AppCompatActivity {
 
     private void bindImageAnalysis(@NonNull ProcessCameraProvider cameraProvider) {
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(1280, 720))
+                        //.setTargetResolution(new Size(1280, 720))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build();
+
+
 
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
             @SuppressLint("UnsafeExperimentalUsageError")
             @Override
             public void analyze(@NonNull ImageProxy image) {
 
-                YuvToRgbConverter y2b = new YuvToRgbConverter(getApplicationContext());
-                Image img = image.getImage();
-                Bitmap bitmap = Bitmap.createBitmap(
-                        img.getWidth(), img.getHeight(), Bitmap.Config.ARGB_8888);
-                y2b.yuvToRgb(image.getImage(), bitmap);
-
-                _obj_tracker.ObjectTrackerSetSize(img.getWidth(), img.getHeight());
-
-                if (_tf_classifier == null) {
-                    try {
-                        _tf_classifier = TFClassifier.create(_activity, Model.Device.CPU, 2);
-                    } catch (IOException e) {
-                        Log.d(TAG, "no classifier");
-                    }
-                }
-
-                if (bitmap != null) {
-                    final List<Recognition> results =
-                            _tf_classifier.TFRecognizeImage2(bitmap, image.getImageInfo().getRotationDegrees());
-                    Log.d(TAG, results.toString());
-
-                    _obj_tracker.ObjectTrackerDraw(results);
-                } else {
-                    Log.d(TAG, "No bitmap");
-                }
+                int rotationDegrees = image.getImageInfo().getRotationDegrees();
 
 
+                Log.d(RecognitioSetting.get_log_tag(), "roation degrees " + rotationDegrees);
+
+                _detector.DetectImage(image);
+
+                _detector.DetectorBB();
 
 /*
                 new Runnable() {
@@ -160,5 +152,27 @@ public class CameraActivity extends AppCompatActivity {
 
         cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector,
                 imageAnalysis, preview);
+
+
+        OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+
+                int rotation;
+                if (orientation >= 45 && orientation < 135) {
+                    rotation = Surface.ROTATION_270;
+                } else if (orientation >= 135 && orientation < 225) {
+                    rotation = Surface.ROTATION_180;
+                } else if (orientation >= 225 && orientation < 315) {
+                    rotation = Surface.ROTATION_90;
+                } else {
+                    rotation = Surface.ROTATION_0;
+                }
+
+                imageAnalysis.setTargetRotation(rotation);
+            }
+        };
+        orientationEventListener.enable();
+
     }
 }

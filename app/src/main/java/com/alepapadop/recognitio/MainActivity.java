@@ -19,6 +19,13 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = "CameraX";
     private int ACTIVITY_RESULT = 1;
 
+    private static final String[] WRITE_PERMISSION = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private static final String[] READ_PERMISSION = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE};
+    private static final String[] MANAGE_PERMISSION = new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE};
+    private static final String[] ACCESS_PERMISSION = new String[]{Manifest.permission.ACCESS_MEDIA_LOCATION};
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,11 +62,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestPermission() {
+
+        String[] perm = new String[] {CAMERA_PERMISSION[0], WRITE_PERMISSION[0], READ_PERMISSION[0], MANAGE_PERMISSION[0], ACCESS_PERMISSION[0]};
+
         ActivityCompat.requestPermissions(
                 this,
-                CAMERA_PERMISSION,
+                //CAMERA_PERMISSION,
+                perm,
                 CAMERA_REQUEST_CODE
         );
+
+
     }
 
     @Override
@@ -68,13 +81,13 @@ public class MainActivity extends AppCompatActivity {
                                            int[] grantResults){
         switch (requestCode) {
             case CAMERA_REQUEST_CODE: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "permission was granted");
                     enableCamera();
                 } else {
                     Log.d(TAG, "permission was denied");
 
-                    TextView tv = (TextView)findViewById(R.id.textView);
+                    TextView tv = (TextView) findViewById(R.id.textView);
                     tv.setText(R.string.camera_permission);
                 }
             }

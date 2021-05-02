@@ -21,7 +21,6 @@ public class ObjectTracker {
 
     public ObjectTracker(Draw draw) {
         _draw = draw;
-
     }
 
     public void ObjectTrackerSetSize(int width, int height) {
@@ -39,7 +38,7 @@ public class ObjectTracker {
         rectf.right = rec.getLocation().right * _height/300;
         rectf.bottom = rec.getLocation().bottom * _width/300;
 
-        Log.d("CameraX", "rectf size: left: " + rectf.left + " top: " + rectf.top + " right: " + rectf.right + " bottom:" + rectf.bottom);
+        Log.d(RecognitioSetting.get_log_tag(), "rect size: left: " + rectf.left + " top: " + rectf.top + " right: " + rectf.right + " bottom:" + rectf.bottom);
 
         rec.setLocation(rectf);
 
