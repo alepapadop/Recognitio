@@ -66,6 +66,8 @@ public class CameraActivity extends AppCompatActivity {
 
         _obj_tracker = new ObjectTracker(_draw);
         _detector = new Detector(this, getApplicationContext(), _obj_tracker);
+        Size size = _detector.DetectorImageInputSize();
+        _obj_tracker.ObjectTrackerSetDetectorSize(size.getWidth(), size.getWidth());
 
         _cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
@@ -97,8 +99,6 @@ public class CameraActivity extends AppCompatActivity {
             @SuppressLint("UnsafeExperimentalUsageError")
             @Override
             public void analyze(@NonNull ImageProxy image_proxy) {
-
-                _obj_tracker.ObjectTrackerSetSize(image_proxy.getWidth(), image_proxy.getHeight());
 
                 ArrayList<Recognition> detections = _detector.DetectImage(image_proxy);
 

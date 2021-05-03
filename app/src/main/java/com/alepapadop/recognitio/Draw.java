@@ -89,8 +89,6 @@ public class Draw extends View {
 
             RectF rect = rec.getLocation();
 
-
-
             canvas.drawRect(rect, paint);
             canvas.drawText(rec.toStringDraw(), rect.left, rect.top - 1, paint_label);
         }

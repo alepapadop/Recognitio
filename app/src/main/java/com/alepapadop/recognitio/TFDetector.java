@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageProxy;
@@ -127,10 +128,12 @@ public class TFDetector {
 
         Bitmap bitmap = TFPreProcessImage(context, image_proxy);
 
+        debug_write_image_wrap(context, bitmap);
+
         //_tf_image = TensorImage.fromBitmap(bitmap);
         TensorImage tf_image = TFLoadImage(bitmap, image_proxy.getImageInfo().getRotationDegrees());
 
-        debug_write_image_wrap(context, tf_image.getBitmap());
+        //debug_write_image_wrap(context, tf_image.getBitmap());
 
         //Log.d(RecognitioSetting.get_log_tag(), "After image proc width: " + tf_image.getWidth() + " height: " + tf_image.getHeight());
 
@@ -138,20 +141,22 @@ public class TFDetector {
 
         int cnt = 0;
         for (Detection detection : results) {
-            if (detection.getCategories().get(0).getScore() > 0.5) {
                 recognitions.add(
                         new Recognition(
                                 "" + cnt++,
                                 detection.getCategories().get(0).getLabel(),
                                 detection.getCategories().get(0).getScore(),
                                 detection.getBoundingBox()));
-            }
-
         }
 
         return recognitions;
     }
 
+    public Size TFDetectorImageInputSize() {
+        Size size = new Size(_img_sz_x, _img_sz_y);
+
+        return size;
+    }
 
     //-----------------------------------------
     //-----------------------------------------

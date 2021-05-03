@@ -3,6 +3,7 @@ package com.alepapadop.recognitio;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
+import android.util.Size;
 
 import androidx.camera.core.ImageProxy;
 import java.io.IOException;
@@ -46,4 +47,16 @@ public class Detector {
         return detection_results;
     }
 
+    public Size DetectorImageInputSize() {
+        Size size = null;
+
+        if (_use_ml_kit) {
+            size = new Size(0,0);
+            assert false;
+        } else {
+            size = _tf_detector.TFDetectorImageInputSize();
+        }
+
+        return size;
+    }
 }
