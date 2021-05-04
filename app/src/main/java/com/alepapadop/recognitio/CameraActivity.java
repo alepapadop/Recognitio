@@ -151,27 +151,5 @@ public class CameraActivity extends AppCompatActivity {
         cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector,
                 imageAnalysis, preview);
 
-
-
-        OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-
-                int rotation;
-                if (orientation >= 45 && orientation < 135) {
-                    rotation = Surface.ROTATION_270;
-                } else if (orientation >= 135 && orientation < 225) {
-                    rotation = Surface.ROTATION_180;
-                } else if (orientation >= 225 && orientation < 315) {
-                    rotation = Surface.ROTATION_90;
-                } else {
-                    rotation = Surface.ROTATION_0;
-                }
-
-                imageAnalysis.setTargetRotation(rotation);
-            }
-        };
-        orientationEventListener.enable();
-
     }
 }

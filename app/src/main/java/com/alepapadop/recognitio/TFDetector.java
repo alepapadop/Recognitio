@@ -128,14 +128,13 @@ public class TFDetector {
 
         Bitmap bitmap = TFPreProcessImage(context, image_proxy);
 
-        debug_write_image_wrap(context, bitmap);
+        //edw swsta erxetai
+        //debug_write_image_wrap(context, bitmap);
 
         //_tf_image = TensorImage.fromBitmap(bitmap);
         TensorImage tf_image = TFLoadImage(bitmap, image_proxy.getImageInfo().getRotationDegrees());
 
-        //debug_write_image_wrap(context, tf_image.getBitmap());
-
-        //Log.d(RecognitioSetting.get_log_tag(), "After image proc width: " + tf_image.getWidth() + " height: " + tf_image.getHeight());
+        debug_write_image_wrap(context, tf_image.getBitmap());
 
         List<Detection> results = _tf_obj_detector.detect(tf_image);
 

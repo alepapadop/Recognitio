@@ -26,7 +26,7 @@ public class ObjectTracker {
     private int         _detector_height = 1;
     private int         _detector_width = 1;
 
-    private final int   _pixel_offset = 3;
+    private final int   _pixel_offset = 10;
 
     public ObjectTracker(Draw draw) {
         _draw = draw;
