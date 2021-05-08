@@ -3,68 +3,107 @@ package com.alepapadop.recognitio;
 import android.graphics.RectF;
 
 public class Recognition {
-    /**
-     * A unique identifier for what has been recognized. Specific to the class, not the instance of
-     * the object.
-     */
-    private final String id;
 
-    /** Display name for the recognition. */
-    private final String title;
+    // id of the detected object
+    private String _id;
 
-    /**
-     * A sortable score for how good the recognition is relative to others. Higher should be better.
-     */
-    private final Float confidence;
+    // The label of the detected object
+    private final String _label;
 
-    /** Optional location within the source image for the location of the recognized object. */
-    private RectF location;
+    // the confidence score of the detected object
+    private final Float _confidence;
 
-    public Recognition(
-            final String id, final String title, final Float confidence, final RectF location) {
-        this.id = id;
-        this.title = title;
-        this.confidence = confidence;
-        this.location = location;
+    // the location of the detected object. The locations are according to the input image of the
+    // detections algorithm.
+    private RectF _location;
+
+    // the size of the bounding box in the x and the y axis
+    private float  _object_x_size;
+    private float  _object_y_size;
+
+    private float   _object_x_center;
+    private float   _object_y_center;
+
+    private void CalcRecognitionLocationMagnitudes() {
+        _object_x_size = _location.right - _location.left;
+        _object_y_size = _location.bottom - _location.top;
+
+        _object_x_center = _location.left +_object_x_size / 2;
+        _object_y_center = _location.bottom +_object_y_size / 2;
+    }
+
+    public Recognition(final String id, final String title, final Float confidence, final RectF location) {
+
+        _id = id;
+        _label = title;
+        _confidence = confidence;
+        _location = location;
+
+        CalcRecognitionLocationMagnitudes();
+
     }
 
     public String getId() {
-        return id;
+        return _id;
     }
 
-    public String getTitle() {
-        return title;
+    public void setId(String id) {
+        _id = id;
+    }
+
+    public String getLabel() {
+        return _label;
     }
 
     public Float getConfidence() {
-        return confidence;
+        return _confidence;
     }
 
     public RectF getLocation() {
-        return new RectF(location);
+        return new RectF(_location);
     }
 
     public void setLocation(RectF location) {
-        this.location = location;
+        _location = location;
     }
 
-    @Override
-    public String toString() {
+    public float get_object_x_size() {
+        return _object_x_size;
+    }
+
+    public float get_object_y_size() {
+        return _object_y_size;
+    }
+
+    public float get_object_x_center() {
+        return _object_x_center;
+    }
+
+    public float get_object_y_center() {
+        return _object_y_center;
+    }
+
+    public String debugRecognition() {
         String resultString = "";
-        if (id != null) {
-            resultString += "[" + id + "] ";
+
+        if (_id != null) {
+            resultString += "[" + _id + "] ";
         }
 
-        if (title != null) {
-            resultString += title + " ";
+        if (_label != null) {
+            resultString += _label + " ";
         }
 
-        if (confidence != null) {
-            resultString += String.format("(%.1f%%) ", confidence * 100.0f);
+        if (_confidence != null) {
+            resultString += String.format("(%.1f%%) ", _confidence * 100.0f);
         }
 
-        if (location != null) {
-            resultString += location + " ";
+        if (_location != null) {
+            resultString += _location + " ";
+        }
+
+        if (_location != null) {
+            resultString += "(" + _object_x_size / 2 + ", " + _object_y_size / 2 + ")";
         }
 
         return resultString.trim();
@@ -72,16 +111,18 @@ public class Recognition {
 
     public String toStringDraw() {
         String resultString = "";
-        if (id != null) {
-            resultString += "[" + id + "] ";
+
+        if (_id != null) {
+            resultString += "[" + _id + "] ";
         }
 
-        if (title != null) {
-            resultString += title + " ";
+
+        if (_label != null) {
+            resultString += _label + " ";
         }
 
-        if (confidence != null) {
-            resultString += String.format("(%.1f%%) ", confidence * 100.0f);
+        if (_confidence != null) {
+            resultString += String.format("(%.1f%%) ", _confidence * 100.0f);
         }
 
         return resultString.trim();

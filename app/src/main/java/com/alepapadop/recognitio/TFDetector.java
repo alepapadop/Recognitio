@@ -45,6 +45,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,6 +61,7 @@ public class TFDetector {
     private ObjectDetector                  _tf_obj_detector;
     private Bitmap                          _bitmap = null;
 
+
     public TFDetector(Activity activity) throws IOException {
 
         // load the model for the Interpreter
@@ -67,7 +70,7 @@ public class TFDetector {
         // set the options for the detection
         ObjectDetector.ObjectDetectorOptions tf_obj_detector_options = ObjectDetector.ObjectDetectorOptions.builder()
                                                                             .setMaxResults(RecognitioSetting.get_num_detections())
-                                                                            .setNumThreads(RecognitioSetting.get_num_detections())
+                                                                            .setNumThreads(RecognitioSetting.get_num_threads())
                                                                             .setScoreThreshold(RecognitioSetting.get_confidence_threshold())
                                                                             .build();
 
@@ -134,7 +137,7 @@ public class TFDetector {
         //_tf_image = TensorImage.fromBitmap(bitmap);
         TensorImage tf_image = TFLoadImage(bitmap, image_proxy.getImageInfo().getRotationDegrees());
 
-        debug_write_image_wrap(context, tf_image.getBitmap());
+        //debug_write_image_wrap(context, tf_image.getBitmap());
 
         List<Detection> results = _tf_obj_detector.detect(tf_image);
 
@@ -147,6 +150,8 @@ public class TFDetector {
                                 detection.getCategories().get(0).getScore(),
                                 detection.getBoundingBox()));
         }
+
+
 
         return recognitions;
     }
