@@ -11,14 +11,20 @@ import java.util.ArrayList;
 
 public class Detector {
 
+    // a variable for deciding for the detection API. MLKit was tested but was not working as
+    // expected the _use_mlk_kit should always be zero
     private final boolean       _use_ml_kit;
+    // The detector fot the MLKit API
     private MLDetector          _ml_detector;
+    // The TensorFlow Task Library detector object
     private TFDetector          _tf_detector;
+    // The application context
     private final Context       _context;
 
-
+    // detector initialization function
     public Detector(Activity activity, Context context, ObjectTracker obj_tracker) {
 
+        // get the global settings for the app
         _use_ml_kit = RecognitioSetting.get_use_ml_kit();
         _context = context;
 
@@ -34,6 +40,7 @@ public class Detector {
         }
     }
 
+    // Returns the object detection results in an array list of custom Recognition objects
     public ArrayList<Recognition> DetectImage(ImageProxy image_proxy) {
 
         ArrayList detection_results;
@@ -47,6 +54,7 @@ public class Detector {
         return detection_results;
     }
 
+    // Returns the detector CNN network input image size
     public Size DetectorImageInputSize() {
         Size size = null;
 

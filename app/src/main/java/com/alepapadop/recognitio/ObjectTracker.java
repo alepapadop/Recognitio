@@ -27,16 +27,24 @@ import static java.lang.Math.sqrt;
 
 public class ObjectTracker {
 
+    // the draw layout for drawing on it the bounding boxes
     private Draw                _draw;
 
+    // the camera preview height and width in pixels
     private int                 _view_height = 1;
     private int                 _view_width = 1;
 
+    // the CNN detector image input width and height
     private int                 _detector_height = 1;
     private int                 _detector_width = 1;
 
+    // a offset for the bounding box, the offset makes the drawing bounding box a little bit
+    // bigger in order to void drawing the lines exaclty on the detected object. Also due to
+    // the resize operation a small math error is created so a offset is a good solution to
+    // avoid this error
     private final int           _pixel_offset = RecognitioSetting.get_pixel_bb_offset();
 
+    // contains the recognitions from the previus frame, used for the object locking mechanism
     private List<Recognition>   _prev_recognitions = null;
 
     public ObjectTracker(Draw draw) {
@@ -54,10 +62,17 @@ public class ObjectTracker {
         _detector_height = height;
     }
 
+    // Adds the pixel offset to the recognition bounding box
     private void ObjectTrackerFixLocations(Recognition rec) {
 
         RectF rectf = rec.getLocation();
 
+        // Every recognition from the CNN detector has coordinates that corresponds to the
+        // CNN input image. In order to make the bounding box visible in the camera preview
+        // we have to make coordinate translation.
+        // It is important to first make the multiplication and then the division, this way we
+        // get the minimum math error. Multiplying the ratio will multiply also the math error.
+        // We are also adding the pixel offset to make the bounding box a little bit bigger
         rectf.left = ((rec.getLocation().left * _view_width) / _detector_width) - _pixel_offset;
         rectf.top = ((rec.getLocation().top * _view_height) / _detector_height) + _pixel_offset;
         rectf.right = ((rec.getLocation().right * _view_width) / _detector_width) + _pixel_offset;
@@ -66,6 +81,9 @@ public class ObjectTracker {
         rec.setLocation(rectf);
     }
 
+    // This is a dummy object locking approach. We are comparing the previous frame
+    // with the current and compare the bounding boxes, if a bounding box has moved a little bit (search distance)
+    // and the object is of the same class then we assume it is the same object and so we keep the same object id
     private boolean ObjectTrackerCompareToLock(Recognition cur_rec, Recognition prev_rec) {
         boolean ret_val = false;
         float cur_rec_x_center = cur_rec.get_object_x_center();
@@ -114,6 +132,8 @@ public class ObjectTracker {
         return ret_val;
     }
 
+    // This functions compares all the current frame bounding boxes withe the ones from the
+    // previous frame in order to find an object lock
     private void ObjectTrackerTryToLockObject(List<Recognition> current_recognitions) {
 
         HashMap<String, Recognition> ids_rec_map = new HashMap<>();
@@ -164,9 +184,11 @@ public class ObjectTracker {
 
     }
 
+    // Calls the draw for the bounding boxes
     public void ObjectTrackerDraw(List<Recognition> recognitions) {
 
-        // for testing the lock
+        // for testing the lock, change the order of the objects in order to avoid
+        // the case they are always recognized in the same order.
         Collections.reverse(recognitions);
 
         ObjectTrackerTryToLockObject(recognitions);

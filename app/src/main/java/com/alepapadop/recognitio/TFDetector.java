@@ -77,6 +77,7 @@ public class TFDetector {
         // create the detector
         _tf_obj_detector = ObjectDetector.createFromBufferAndOptions(_tf_file_model, tf_obj_detector_options);
 
+        // Get the metadata of the tfile
         MetadataExtractor meta = new MetadataExtractor(_tf_file_model);
 
         if (meta.hasMetadata()) {
@@ -90,14 +91,21 @@ public class TFDetector {
         }
     }
 
+    // Prepares the bitmap image for the CNN network
     private TensorImage TFLoadImage(final Bitmap bitmap, int sensorOrientation) {
 
         //_tf_image.load(bitmap);
+        // Create a TensorImage from the bitmap in order to apply on the image translations
         TensorImage tf_image = TensorImage.fromBitmap(bitmap);
 
-        int cropSize = min(bitmap.getWidth(), bitmap.getHeight());
+
+        //int cropSize = min(bitmap.getWidth(), bitmap.getHeight());
+
+        // make the rotation, this is a very complex issue. The sensor of the camera has its own orientation
+        // and the phone itself has its own orientation
         int numRotation = (360 - sensorOrientation) / 90;
 
+        // make the image translation and prepare it for the CNN network
         ImageProcessor imageProcessor =
                 new ImageProcessor.Builder()
                         //.add(new ResizeWithCropOrPadOp(cropSize, cropSize))
@@ -111,14 +119,21 @@ public class TFDetector {
         return imageProcessor.process(tf_image);
     }
 
+    // Converts the image proxy to a bitmap
     private Bitmap TFPreProcessImage(Context context,@NonNull ImageProxy image_proxy) {
         YuvToRgbConverter y2b = new YuvToRgbConverter(context);
 
         if (_bitmap == null) {
+            // create once a single dummy bitmap object and used for filling it later with the
+            // image data
             _bitmap = Bitmap.createBitmap(
                     image_proxy.getWidth(), image_proxy.getHeight(), Bitmap.Config.ARGB_8888);
         }
 
+        // this is another issue here. There is nowhere an explanation about the YUV format in the
+        // android documentation. There is only a link that says you should use a converter from
+        // the AOSP (Android Open Source Project) to convert the image proxy image to a bitmap
+        // i have lost many days on this issue
         try (@SuppressLint("UnsafeExperimentalUsageError") Image img = image_proxy.getImage()) {
             y2b.yuvToRgb(img, _bitmap);
         }
@@ -126,19 +141,25 @@ public class TFDetector {
         return _bitmap;
     }
 
+    // Runs the Detector and stores the results
     public ArrayList<Recognition> TFDetectImage(Context context, ImageProxy image_proxy) {
         final ArrayList<Recognition> recognitions = new ArrayList<>();
 
+        // get the bitmap image from the image proxy
         Bitmap bitmap = TFPreProcessImage(context, image_proxy);
 
-        //edw swsta erxetai
+        // debug operation, store an image on the device to check the orientation
         //debug_write_image_wrap(context, bitmap);
 
         //_tf_image = TensorImage.fromBitmap(bitmap);
+        // Get the TensorImage form the bitmap
         TensorImage tf_image = TFLoadImage(bitmap, image_proxy.getImageInfo().getRotationDegrees());
 
+        // debug operation, store an image on the device to check the cropping and the translations
+        // of the image
         //debug_write_image_wrap(context, tf_image.getBitmap());
 
+        // make the detections and store them
         List<Detection> results = _tf_obj_detector.detect(tf_image);
 
         int cnt = 0;
@@ -178,6 +199,8 @@ public class TFDetector {
         }
     }
 
+    // a function to write a botmap in a file in the device in order to check the bitmap
+    // image status (rotation, colors, corpping  etc)
     private void debug_write_image(Context context, Bitmap bitmap) throws IOException {
 
         if (flg == false) {

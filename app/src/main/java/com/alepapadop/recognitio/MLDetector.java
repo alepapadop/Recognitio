@@ -16,6 +16,8 @@ import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 
 import java.util.ArrayList;
 
+// This a a class used to test the MLKit detecction API. Do not use it, the MLKit is not working
+// as expected
 public class MLDetector {
 
     private final ObjectDetector  _ml_object_detector;

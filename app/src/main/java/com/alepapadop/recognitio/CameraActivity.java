@@ -49,13 +49,17 @@ import java.util.concurrent.ExecutionException;
 
 public class CameraActivity extends AppCompatActivity {
 
+    // camera preview layout
     private PreviewView                             _previewView;
+    // the android building camera provider
     private ListenableFuture<ProcessCameraProvider> _cameraProviderFuture;
+    // custom object tracker for controlling the bounding box drawing process
     private ObjectTracker                           _obj_tracker;
+    // custom draw layout for drawing the bounding boxes
     private Draw                                    _draw;
+    // custon detetor object for which controls the MLKit and Task Library detection process
     private Detector                                _detector;
 
-    private String TAG = "CameraX";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,16 +72,19 @@ public class CameraActivity extends AppCompatActivity {
         _obj_tracker = new ObjectTracker(_draw);
         _detector = new Detector(this, getApplicationContext(), _obj_tracker);
         Size size = _detector.DetectorImageInputSize();
+        // the object tracker stores the cnn detector input image size in pixels
         _obj_tracker.ObjectTrackerSetDetectorSize(size.getWidth(), size.getWidth());
 
         _cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
+        // try to open the camera on the device
         _cameraProviderFuture.addListener(new Runnable() {
             @Override
             public void run() {
                 try {
                     ProcessCameraProvider cameraProvider = _cameraProviderFuture.get();
 
+                    // run the camera preview image analysis
                     bindImageAnalysis(cameraProvider);
 
                 } catch (ExecutionException | InterruptedException e) {
@@ -86,6 +93,7 @@ public class CameraActivity extends AppCompatActivity {
             }
         }, ContextCompat.getMainExecutor(this));
 
+        // keep the screen on while the camera preview is open
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     }
@@ -96,48 +104,20 @@ public class CameraActivity extends AppCompatActivity {
                         //.setTargetResolution(new Size(1280, 720))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build();
 
+        // The object tracker also stores the viel layout image in pixels
         _obj_tracker.ObjectTrackerSetViewSize(_draw.getWidth(), _draw.getHeight());
 
+        // the callback functions for every frame the camera provider is processing
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
             @SuppressLint("UnsafeExperimentalUsageError")
             @Override
             public void analyze(@NonNull ImageProxy image_proxy) {
 
+                // get the detections from the cnn detector
                 ArrayList<Recognition> detections = _detector.DetectImage(image_proxy);
 
+                // draw the bounding boxes
                 _obj_tracker.ObjectTrackerDraw(detections);
-
-/*
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        if (_tf_classifier != null) {
-                            final long startTime = SystemClock.uptimeMillis();
-                            final List<Recognition> results =
-                                    _tf_classifier.TFRecognizeImage(bitmap, image.getImageInfo().getRotationDegrees());
-
-                            Log.d(TAG, "Analysis");
-                            //lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-                            //LOGGER.v("Detect: %s", results);
-
-                            //runOnUiThread(
-                            //        new Runnable() {
-                            //            @Override
-                            //            public void run() {
-                            //                showResultsInBottomSheet(results);
-                            //                showFrameInfo(previewWidth + "x" + previewHeight);
-                            //                showCropInfo(imageSizeX + "x" + imageSizeY);
-                            //                showCameraResolution(imageSizeX + "x" + imageSizeY);
-                            //                showRotationInfo(String.valueOf(sensorOrientation));
-                            //                showInference(lastProcessingTimeMs + "ms");
-                            //            }
-                            //        });
-                        }
-                        //readyForNextImage();
-                    }
-                };
-
- */
 
                 image_proxy.close();
 
@@ -146,11 +126,14 @@ public class CameraActivity extends AppCompatActivity {
 
         Preview preview = new Preview.Builder().build();
 
+        // use the back camera of the device
         CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
 
+        // set the surface provider for the preview layout, which is the camera preview
         preview.setSurfaceProvider(_previewView.getSurfaceProvider());
 
+        // lifecycle binding for the camera
         cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector,
                 imageAnalysis, preview);
 

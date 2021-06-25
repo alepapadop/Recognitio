@@ -2,6 +2,7 @@ package com.alepapadop.recognitio;
 
 import android.graphics.RectF;
 
+// This is a simple class for storing data of the recognized objects
 public class Recognition {
 
     // id of the detected object

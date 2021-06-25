@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 import com.google.android.material.slider.Slider;
 
+// This class is the setting user interface whtich appears when the user preses the
+// floating button
 public class SettingsActivity extends AppCompatActivity {
 
 
