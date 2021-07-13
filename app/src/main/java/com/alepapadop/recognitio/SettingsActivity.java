@@ -78,6 +78,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     }
 
+/*
     private static final int PICK_PDF_FILE = 2;
 
     public void PickFile(View view) {
@@ -92,7 +93,7 @@ public class SettingsActivity extends AppCompatActivity {
         startActivityForResult(intent, PICK_PDF_FILE);
 
     }
-
+*/
 
     private void initialize_seekbar(SeekBar seek, TextView text, int max, int min, int current) {
 

@@ -18,13 +18,14 @@
 
         <include android:id="@+id/slider_confidence" layout="@layout/slider" />
 
+ <!--
         <Button
             android:id="@+id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="PickFile"
             android:text="Button" />
-
+-->
 
     </LinearLayout>
 

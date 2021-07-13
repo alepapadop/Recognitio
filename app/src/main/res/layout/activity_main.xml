@@ -30,7 +30,8 @@
             android:layout_gravity="end|bottom"
             android:contentDescription="@string/settings"
             android:onClick="settingsClick"
-            android:layout_margin="16dp" />
+            android:layout_margin="16dp"
+            android:src="@drawable/common_full_open_on_phone"/>
 
 
     </LinearLayout>
